@@ -5,7 +5,7 @@
     <link rel="icon" type="image/png" href="/images/special/1.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#0a0118" />
-    <meta name="description" content="Stork Crush - A beautiful Match-3 puzzle game" />
+    <meta name="description" content="Stork Crush" />
     <title>Stork Crush</title>
   </head>
   <body>
@@ -15,14 +15,14 @@
       import { getDatabase, ref, set, push, onValue, update, remove, onDisconnect, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
       const firebaseConfig = {
-        apiKey: "AIzaSyB30KXXJ4oEBmJdmuVH0KCgZziOXA2Iugk",
-        authDomain: "stork-crush.firebaseapp.com",
-        databaseURL: "https://stork-crush-default-rtdb.firebaseio.com",
-        projectId: "stork-crush",
-        storageBucket: "stork-crush.firebasestorage.app",
-        messagingSenderId: "255913439004",
-        appId: "1:255913439004:web:280a2199069c069aee94d9",
-        measurementId: "G-33GTWDS67R"
+        apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+        authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+        databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+        projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+        storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+        appId: import.meta.env.VITE_FIREBASE_APP_ID,
+        measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
       };
 
       const app = initializeApp(firebaseConfig);
