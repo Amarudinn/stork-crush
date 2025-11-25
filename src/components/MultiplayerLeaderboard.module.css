@@ -1,0 +1,100 @@
+.leaderboard {
+  width: 100%;
+  margin-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 1rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: white;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.list {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.2s;
+}
+
+.row:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.leftSide {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.medal {
+  font-size: 1.5rem;
+}
+
+.rank {
+  color: #94a3b8;
+  font-weight: bold;
+  font-size: 1.125rem;
+  min-width: 2rem;
+}
+
+.playerName {
+  color: white;
+  font-weight: 500;
+}
+
+.status {
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+}
+
+.statusAlive {
+  color: #22d3ee;
+}
+
+.statusYou {
+  color: #22d3ee;
+  font-weight: 600;
+}
+
+.statusDead {
+  color: #ff4d6d;
+}
+
+.score {
+  color: #22d3ee;
+  font-weight: bold;
+  font-size: 1.125rem;
+}
+
+@media (max-width: 480px) {
+  .row {
+    padding: 0.5rem;
+  }
+
+  .medal {
+    font-size: 1.25rem;
+  }
+
+  .rank {
+    font-size: 1rem;
+  }
+
+  .playerName {
+    font-size: 0.875rem;
+  }
+
+  .score {
+    font-size: 1rem;
+  }
+}

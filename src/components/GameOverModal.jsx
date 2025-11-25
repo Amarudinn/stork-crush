@@ -1,12 +1,13 @@
 import { motion } from 'framer-motion';
-import { Trophy, RotateCcw, Share2 } from 'lucide-react';
+import { Trophy, RotateCcw, Share2, Home } from 'lucide-react';
 import styles from './GameOverModal.module.css';
+import MultiplayerLeaderboard from './MultiplayerLeaderboard';
 
-const GameOverModal = ({ score, highScore, onRestart }) => {
+const GameOverModal = ({ score, highScore, onRestart, isMultiplayer, multiplayerData }) => {
   const isNewHighScore = score === highScore && score > 0;
 
   const shareToTwitter = () => {
-    const text = `I just scored ${score} in Stork Crush Match-3! Can you beat me? #IndieGame #ReactJS #Match3Game`;
+    const text = `I just scored ${score} in Stork Crush! Can you beat me? @StorkOracle \n\nPlay now: https://stork-crush.vercel.app/`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
@@ -34,9 +35,9 @@ const GameOverModal = ({ score, highScore, onRestart }) => {
             <Trophy className={styles.trophy} />
           </motion.div>
 
-          <h2 className={styles.title}>Game Over!</h2>
+          <h2 className={styles.title}>{isMultiplayer ? 'Game Ended' : 'Game Over!'}</h2>
           
-          {isNewHighScore && (
+          {!isMultiplayer && isNewHighScore && (
             <motion.p
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -57,8 +58,14 @@ const GameOverModal = ({ score, highScore, onRestart }) => {
             >
               {score}
             </motion.p>
-            <p className={styles.highScoreText}>High Score: {highScore}</p>
           </div>
+
+          {isMultiplayer && multiplayerData?.players && (
+            <MultiplayerLeaderboard 
+              players={multiplayerData.players} 
+              currentPlayerId={multiplayerData.playerId}
+            />
+          )}
 
           <div className={styles.buttons}>
             <motion.button
@@ -67,18 +74,20 @@ const GameOverModal = ({ score, highScore, onRestart }) => {
               onClick={onRestart}
               className={`${styles.button} ${styles.buttonPrimary}`}
             >
-              <RotateCcw className={styles.buttonIcon} />
-              Play Again
+              {isMultiplayer ? <Home className={styles.buttonIcon} /> : <RotateCcw className={styles.buttonIcon} />}
+              {isMultiplayer ? 'Main Menu' : 'Play Again'}
             </motion.button>
 
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={shareToTwitter}
-              className={`${styles.button} ${styles.buttonSecondary}`}
-            >
-              <Share2 className={styles.buttonIcon} />
-            </motion.button>
+            {!isMultiplayer && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={shareToTwitter}
+                className={`${styles.button} ${styles.buttonSecondary}`}
+              >
+                <Share2 className={styles.buttonIcon} />
+              </motion.button>
+            )}
           </div>
         </div>
       </motion.div>

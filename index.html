@@ -2,14 +2,42 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/png" href="/images/special/1.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#0a0118" />
     <meta name="description" content="Stork Crush - A beautiful Match-3 puzzle game" />
-    <title>Stork Crush - Match 3 Game</title>
+    <title>Stork Crush</title>
   </head>
   <body>
     <div id="root"></div>
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+      import { getDatabase, ref, set, push, onValue, update, remove, onDisconnect, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyB30KXXJ4oEBmJdmuVH0KCgZziOXA2Iugk",
+        authDomain: "stork-crush.firebaseapp.com",
+        databaseURL: "https://stork-crush-default-rtdb.firebaseio.com",
+        projectId: "stork-crush",
+        storageBucket: "stork-crush.firebasestorage.app",
+        messagingSenderId: "255913439004",
+        appId: "1:255913439004:web:280a2199069c069aee94d9",
+        measurementId: "G-33GTWDS67R"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+
+      window.firebaseDB = db;
+      window.firebaseRef = ref;
+      window.firebaseSet = set;
+      window.firebasePush = push;
+      window.firebaseOnValue = onValue;
+      window.firebaseUpdate = update;
+      window.firebaseRemove = remove;
+      window.firebaseOnDisconnect = onDisconnect;
+      window.firebaseGet = get;
+    </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

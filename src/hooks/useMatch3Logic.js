@@ -1,8 +1,8 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 
 const GRID_SIZE = 8;
-const TOTAL_MOVES = 30;
-const TOTAL_TIME = 120; // 120 seconds = 2 minutes
+const TOTAL_MOVES = 30; // Default for solo: 30 moves
+const TOTAL_TIME = 120; // Default for solo: 2 minutes
 const COLORS = 6;
 const SPECIAL_DROP_CHANCE = 0.05;
 
@@ -13,11 +13,25 @@ const SPECIAL_TYPES = {
   CHAOS_ORB: 10,
 };
 
-export const useMatch3Logic = () => {
+export const useMatch3Logic = (multiplayerConfig = null) => {
+  // Memoize settings to prevent unnecessary re-renders
+  const gameSettings = useMemo(() => {
+    if (multiplayerConfig?.settings) {
+      return {
+        timeLimit: multiplayerConfig.settings.timeLimit,
+        totalMoves: multiplayerConfig.settings.totalMoves
+      };
+    }
+    return {
+      timeLimit: TOTAL_TIME,
+      totalMoves: TOTAL_MOVES
+    };
+  }, [multiplayerConfig?.settings?.timeLimit, multiplayerConfig?.settings?.totalMoves]);
+
   const [grid, setGrid] = useState([]);
   const [score, setScore] = useState(0);
-  const [moves, setMoves] = useState(TOTAL_MOVES);
-  const [timeLeft, setTimeLeft] = useState(TOTAL_TIME);
+  const [moves, setMoves] = useState(() => gameSettings.totalMoves);
+  const [timeLeft, setTimeLeft] = useState(() => gameSettings.timeLimit);
   const [selectedCell, setSelectedCell] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [gameOver, setGameOver] = useState(false);
@@ -30,6 +44,9 @@ export const useMatch3Logic = () => {
   });
   const comboRef = useRef(1);
   const timerRef = useRef(null);
+  const gameOverRef = useRef(false);
+  const scoreUpdateTimeoutRef = useRef(null);
+  const gameStartTimeRef = useRef(null);
 
   const createRandomCell = useCallback((avoidSpecial = false) => {
     if (!avoidSpecial && Math.random() < SPECIAL_DROP_CHANCE) {
@@ -61,25 +78,42 @@ export const useMatch3Logic = () => {
     setGrid(initializeGrid());
   }, [initializeGrid]);
 
-  // Timer effect - runs continuously, only stops on game over
+  // Update moves and time when settings change (for multiplayer)
+  useEffect(() => {
+    if (multiplayerConfig?.settings) {
+      setMoves(gameSettings.totalMoves);
+      setTimeLeft(gameSettings.timeLimit);
+    }
+  }, [gameSettings.totalMoves, gameSettings.timeLimit, multiplayerConfig?.settings]);
+
+  // Timer effect - synced with server time for multiplayer
   useEffect(() => {
     if (gameOver) return;
 
-    timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          return 0;
+    // For multiplayer, sync with server start time
+    if (multiplayerConfig?.gameStartTime) {
+      gameStartTimeRef.current = multiplayerConfig.gameStartTime;
+      
+      const timer = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - gameStartTimeRef.current) / 1000);
+        const remaining = Math.max(0, gameSettings.timeLimit - elapsed);
+        setTimeLeft(remaining);
+        
+        if (remaining <= 0) {
+          clearInterval(timer);
         }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, [gameOver]);
+      }, 100);
+      
+      return () => clearInterval(timer);
+    } else {
+      // Solo mode - normal countdown
+      const timer = setInterval(() => {
+        setTimeLeft(prev => (prev <= 1 ? 0 : prev - 1));
+      }, 1000);
+      
+      return () => clearInterval(timer);
+    }
+  }, [gameOver, multiplayerConfig?.gameStartTime, gameSettings.timeLimit]);
 
   const findMatches = useCallback((currentGrid) => {
     const matches = new Set();
@@ -307,7 +341,7 @@ export const useMatch3Logic = () => {
     let totalPoints = 0;
     let hasMatches = true;
 
-    while (hasMatches) {
+    while (hasMatches && !gameOverRef.current) {
       const matches = findMatches(newGrid);
       
       let allCellsToRemove = [...matches];
@@ -364,7 +398,22 @@ export const useMatch3Logic = () => {
       totalPoints += points;
 
       // Update score immediately
-      setScore(prev => prev + points);
+      setScore(prev => {
+        const newScore = prev + points;
+        
+        // Sync to Firebase if multiplayer
+        if (multiplayerConfig?.onScoreUpdate) {
+          // Debounce score updates
+          if (scoreUpdateTimeoutRef.current) {
+            clearTimeout(scoreUpdateTimeoutRef.current);
+          }
+          scoreUpdateTimeoutRef.current = setTimeout(() => {
+            multiplayerConfig.onScoreUpdate(newScore);
+          }, 500);
+        }
+        
+        return newScore;
+      });
 
       if (uniqueCells.length > 0) {
         const centerCell = uniqueCells[Math.floor(uniqueCells.length / 2)];
@@ -490,30 +539,43 @@ export const useMatch3Logic = () => {
 
   useEffect(() => {
     if ((moves <= 0 || timeLeft <= 0) && !gameOver) {
+      gameOverRef.current = true;
       setGameOver(true);
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
-      if (score > highScore) {
+      
+      // Update high score for solo mode
+      if (!multiplayerConfig && score > highScore) {
         setHighScore(score);
         localStorage.setItem('match3HighScore', score.toString());
       }
+      
+      // Mark player as dead in multiplayer
+      if (multiplayerConfig?.onGameOver) {
+        multiplayerConfig.onGameOver(score);
+      }
     }
-  }, [moves, timeLeft, gameOver, score, highScore]);
+  }, [moves, timeLeft, gameOver, score, highScore, multiplayerConfig]);
 
   const resetGame = useCallback(() => {
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
+    if (scoreUpdateTimeoutRef.current) {
+      clearTimeout(scoreUpdateTimeoutRef.current);
+    }
+    gameOverRef.current = false;
+    gameStartTimeRef.current = null;
     setGrid(initializeGrid());
     setScore(0);
-    setMoves(TOTAL_MOVES);
-    setTimeLeft(TOTAL_TIME);
+    setMoves(gameSettings.totalMoves);
+    setTimeLeft(gameSettings.timeLimit);
     setGameOver(false);
     setSelectedCell(null);
     setFloatingTexts([]);
     comboRef.current = 1;
-  }, [initializeGrid]);
+  }, [initializeGrid, gameSettings]);
 
   return {
     grid,

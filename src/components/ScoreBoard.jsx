@@ -36,15 +36,9 @@ const ScoreBoard = ({ score, moves, timeLeft }) => {
         <div className={styles.section}>
           <div className={styles.content}>
             <span className={styles.label}>Time</span>
-            <motion.div
-              key={timeLeft}
-              initial={{ scale: 1.2 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              className={`${styles.value} ${timeLeft <= 10 ? styles.valueLow : ''}`}
-            >
+            <div className={`${styles.value} ${timeLeft <= 10 ? styles.valueLow : ''}`}>
               {formatTime(timeLeft)}
-            </motion.div>
+            </div>
           </div>
         </div>
 
